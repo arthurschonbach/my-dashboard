@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
+export const revalidate = 1800; // Mise en cache pendant 30 minutes
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const channelIds = searchParams.get('channels')?.split(',');

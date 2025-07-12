@@ -31,6 +31,8 @@ interface RawForecastDay {
     };
 }
 
+export const revalidate = 600; // Mise en cache pendant 10 minutes
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const city = searchParams.get('city');

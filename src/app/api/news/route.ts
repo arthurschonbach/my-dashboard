@@ -5,6 +5,8 @@ const API_KEY = process.env.NEWS_API_KEY;
 // This base URL is for GNews, adapt if you use another service
 const BASE_URL = 'https://gnews.io/api/v4/top-headlines';
 
+export const revalidate = 900; // Mise en cache pendant 15 minutes
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const country = searchParams.get('country');
