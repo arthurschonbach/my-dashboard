@@ -108,7 +108,7 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
                     <div className="grid gap-4 py-4">
                         <Label htmlFor="channels">Channel IDs (comma-separated)</Label>
                         <Input id="channels" value={tempChannels} onChange={(e) => setTempChannels(e.target.value)} />
-                        <p className="text-xs text-muted-foreground">Find a channel's ID in its page source (search for "channelId").</p>
+                        <p className="text-xs text-muted-foreground">Find a channel&apos;s ID in its page source (search for &quot;channelId&quot;).</p>
                     </div>
                     <DialogFooter><DialogClose asChild><Button onClick={handleSave}>Save</Button></DialogClose></DialogFooter>
                 </DialogContent>
