@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Add this images block
   images: {
     remotePatterns: [
       {
@@ -9,9 +8,12 @@ const nextConfig = {
         port: '',
         pathname: '/vi/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.weatherapi.com',
+      },
     ],
   },
-  // ... you might have other configurations here
 };
 
 module.exports = nextConfig;

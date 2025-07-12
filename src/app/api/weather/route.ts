@@ -1,13 +1,12 @@
 // app/api/weather/route.ts
 import { NextResponse } from 'next/server';
 
-// ✅ CONTRAT N°1 : Le format final et propre que notre API enverra au Widget.
-// C'est notre "contrat" pour éviter tout 'any'.
+// ✅ CONTRAT MIS À JOUR : L'icône est maintenant une URL complète, ce qui est plus simple.
 export interface WeatherData {
   current: {
     temp: number;
     description: string;
-    icon: string;
+    iconURL: string; // Changement de 'icon' en 'iconURL'
     high: number;
     low: number;
   };
@@ -15,21 +14,28 @@ export interface WeatherData {
     day: string;
     high: number;
     low: number;
-    icon: string;
+    iconURL: string; // Changement de 'icon' en 'iconURL'
   }[];
 }
 
-// Interfaces pour typer les réponses brutes de l'API OpenWeatherMap
-interface RawApiWeatherDay {
-    dt: number;
-    temp: { max: number; min: number; };
-    weather: { description: string; icon: string; }[];
+// Interface pour typer la réponse brute de WeatherAPI
+interface RawForecastDay {
+    date: string;
+    day: {
+        maxtemp_c: number;
+        mintemp_c: number;
+        condition: {
+            text: string;
+            icon: string;
+        };
+    };
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const city = searchParams.get('city');
-  const apiKey = process.env.OPENWEATHER_API_KEY;
+  // ✅ On utilise la nouvelle variable d'environnement
+  const apiKey = process.env.WEATHERAPI_KEY;
 
   if (!city) {
     return NextResponse.json({ error: 'City is required' }, { status: 400 });
@@ -39,39 +45,37 @@ export async function GET(request: Request) {
   }
 
   try {
-    const geoResponse = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`);
-    if (!geoResponse.ok) throw new Error('Failed to fetch geocoding data');
-    const geoData = await geoResponse.json();
-    if (!geoData || geoData.length === 0) {
-      return NextResponse.json({ error: 'City not found' }, { status: 404 });
+    // ✅ NOUVELLE URL : On appelle l'API de WeatherAPI avec le bon format.
+    // 'days=3' nous donne le jour actuel et les 2 prochains.
+    const weatherResponse = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=3&aqi=no&alerts=no&lang=en`);
+    
+    if (!weatherResponse.ok) {
+        const errorData = await weatherResponse.json();
+        throw new Error(errorData.error.message || 'Failed to fetch weather data');
     }
-    const { lat, lon } = geoData[0];
-
-    const weatherResponse = await fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&appid=${apiKey}&units=metric&lang=fr`);
-    if (!weatherResponse.ok) throw new Error('Failed to fetch weather data');
     const rawData = await weatherResponse.json();
 
-    // ✅ CONTRAT N°2 : On transforme les données brutes en respectant notre contrat "WeatherData".
+    // ✅ NOUVELLE TRANSFORMATION : On mappe la réponse de WeatherAPI à notre contrat WeatherData.
     const formattedData: WeatherData = {
       current: {
-        temp: Math.round(rawData.current.temp),
-        description: rawData.current.weather[0].description,
-        icon: rawData.current.weather[0].icon,
-        high: Math.round(rawData.daily[0].temp.max),
-        low: Math.round(rawData.daily[0].temp.min),
+        temp: Math.round(rawData.current.temp_c),
+        description: rawData.current.condition.text,
+        iconURL: `https:${rawData.current.condition.icon}`, // On ajoute 'https:' car l'API renvoie une URL sans protocole
+        high: Math.round(rawData.forecast.forecastday[0].day.maxtemp_c),
+        low: Math.round(rawData.forecast.forecastday[0].day.mintemp_c),
       },
-      forecast: rawData.daily.slice(1, 3).map((day: RawApiWeatherDay) => ({ // Pas de 'any' ici !
-        day: new Date(day.dt * 1000).toLocaleDateString('fr-FR', { weekday: 'long' }),
-        high: Math.round(day.temp.max),
-        low: Math.round(day.temp.min),
-        icon: day.weather[0].icon,
+      forecast: rawData.forecast.forecastday.slice(1, 3).map((day: RawForecastDay) => ({
+        day: new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'long' }),
+        high: Math.round(day.day.maxtemp_c),
+        low: Math.round(day.day.mintemp_c),
+        iconURL: `https:${day.day.condition.icon}`,
       }))
     };
     
     return NextResponse.json(formattedData);
-  } catch (error) {
-    // Affiche l'erreur côté serveur pour le débogage.
-    console.error('[WEATHER API ERROR]', error);
-    return NextResponse.json({ error: 'Could not fetch weather data.' }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    console.error('[WEATHER API ERROR]', errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

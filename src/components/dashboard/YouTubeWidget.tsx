@@ -3,7 +3,7 @@
 import { useState, ReactNode } from "react";
 import useSWR from "swr";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -13,125 +13,42 @@ import { Label } from "@/components/ui/label";
 import { Settings, Film } from "lucide-react";
 import Image from "next/image";
 
-const decodeHtmlEntities = (text: string) => {
-  if (typeof window === 'undefined') {
-    return text;
-  }
-  const textarea = document.createElement("textarea");
-  textarea.innerHTML = text;
-  return textarea.value;
-};
-
+const decodeHtmlEntities = (text: string) => { if (typeof window === 'undefined') return text; const textarea = document.createElement("textarea"); textarea.innerHTML = text; return textarea.value; };
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-const DEFAULT_CHANNELS = "UCVap-UCsBjURrPoezykLs9EqgamOA,UCIJZA6SJ3JjvuOZgYPYOHnA,UCZ7phf3m2AcPre5ZRpgF5uw,UCflHaa_47QnIfFlKrGG6TIg,UC5bH6_h7gsNYoWhYwQPS86A,UCXUPKJO5MZQN11PqgIvyuvQ,UCYO_jab_esuFRV4b17AJtAw"; // Fireship, Wiloo, Max Bellona, Paulygones, Looking4, Karpathy, 3B1B
-
-// ✅ DÉFINITION DU MODÈLE POUR UNE VIDÉO YOUTUBE
-interface YouTubeVideo {
-  id: {
-    videoId: string;
-  };
-  snippet: {
-    title: string;
-    thumbnails: {
-      medium: {
-        url: string;
-        width: number;
-        height: number;
-      };
-    };
-  };
-}
-
-interface YouTubeWidgetProps {
-  icon?: ReactNode;
-}
+const DEFAULT_CHANNELS = "UCsBjURrPoezykLs9EqgamOA,UCIJZA6SJ3JjvuOZgYPYOHnA,UCZ7phf3m2AcPre5ZRpgF5uw,UCflHaa_47QnIfFlKrGG6TIg";
+interface YouTubeVideo { id: { videoId: string; }; snippet: { title: string; channelTitle: string; thumbnails: { medium: { url: string; }; }; }; }
+interface YouTubeWidgetProps { icon?: ReactNode; }
 
 export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
   const [channels, setChannels] = useLocalStorage("youtube-channels", DEFAULT_CHANNELS);
   const [tempChannels, setTempChannels] = useState(channels);
-
-  const { data: videos, error, isLoading } = useSWR<YouTubeVideo[]>(
-    channels ? `/api/youtube?channels=${channels}` : null,
-    fetcher,
-    { refreshInterval: 3600000 }
-  );
-
+  const { data: videos, error, isLoading } = useSWR<YouTubeVideo[]>(channels ? `/api/youtube?channels=${channels}` : null, fetcher);
   const handleSave = () => setChannels(tempChannels);
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="grid grid-cols-2 gap-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-        </div>
-      );
-    }
-    if (error) {
-      return <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>Could not load videos.</AlertDescription></Alert>;
-    }
-    if (!videos || videos.length === 0) {
-      return (
-        <div className="text-center text-sm text-muted-foreground py-10">
-          <Film className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-          No recent videos found.
-        </div>
-      );
-    }
-    return (
-      <div className="grid grid-cols-2 gap-3">
-        {/* ✅ Utilisation du modèle "YouTubeVideo" au lieu de "any" */}
-        {videos.slice(0, 4).map((video: YouTubeVideo) => (
-          <a
-            href={`https://www.youtube.com/watch?v=${video.id.videoId}`}
-            key={video.id.videoId}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group space-y-2"
-          >
-            <div className="aspect-video w-full overflow-hidden rounded-lg border shadow-sm">
-                <Image
-                    src={video.snippet.thumbnails.medium.url}
-                    alt={decodeHtmlEntities(video.snippet.title)}
-                    width={video.snippet.thumbnails.medium.width}
-                    height={video.snippet.thumbnails.medium.height}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-            </div>
-            <h4 className="font-semibold text-xs text-gray-700 group-hover:text-purple-600">
-              {decodeHtmlEntities(video.snippet.title)}
-            </h4>
-          </a>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 md:col-span-2 xl:col-span-1">
-        <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-3">
-                {icon}
-                <CardTitle className="text-lg font-semibold text-gray-700">Latest Videos</CardTitle>
-            </div>
-            <Dialog>
-                <DialogTrigger asChild><Button variant="ghost" size="icon"><Settings className="h-4 w-4" /></Button></DialogTrigger>
-                <DialogContent>
-                    <DialogHeader><DialogTitle>Edit YouTube Channels</DialogTitle></DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <Label htmlFor="channels">Channel IDs (comma-separated)</Label>
-                        <Input id="channels" value={tempChannels} onChange={(e) => setTempChannels(e.target.value)} />
-                        {/* ✅ Correction des caractères spéciaux */}
-                        <p className="text-xs text-muted-foreground">Find a channel&apos;s ID in its page source (search for &quot;channelId&quot;).</p>
-                    </div>
-                    <DialogFooter><DialogClose asChild><Button onClick={handleSave}>Save</Button></DialogClose></DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </CardHeader>
-        <CardContent>{renderContent()}</CardContent>
+    <Card className="rounded-xl border-b-4 border-purple-400 bg-white shadow-lg transition-transform hover:-translate-y-1">
+      <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between">
+        <div className="flex items-center gap-2 text-purple-600">{icon}<h3 className="text-base font-bold tracking-tight">Latest Videos</h3></div>
+        <Dialog><DialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-purple-600"><Settings className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>YouTube Channels</DialogTitle></DialogHeader><div className="grid gap-4 py-4"><Label htmlFor="channels">Channel IDs</Label><Input id="channels" value={tempChannels} onChange={(e) => setTempChannels(e.target.value)} /><p className="text-xs text-muted-foreground">Find a channel's ID in its page source.</p></div><DialogFooter><DialogClose asChild><Button onClick={handleSave}>Save</Button></DialogClose></DialogFooter></DialogContent></Dialog>
+      </CardHeader>
+      <CardContent className="p-3 pt-0">
+        {isLoading && <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="flex items-center gap-3"><Skeleton className="h-16 w-24 rounded-lg" /><div className="space-y-2 flex-grow"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-1/3" /></div></div>)}</div>}
+        {error && <Alert variant="destructive" className="text-xs"><AlertTitle>Error</AlertTitle><AlertDescription>Could not load videos.</AlertDescription></Alert>}
+        
+        <div className="space-y-1 -mx-1">
+            {!isLoading && !error && Array.isArray(videos) && videos.length > 0 && videos.slice(0, 3).map(video => (
+              <a href={`https://www.youtube.com/watch?v=${video.id.videoId}`} key={video.id.videoId} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group p-1.5 rounded-lg hover:bg-purple-50">
+                <Image src={video.snippet.thumbnails.medium.url} alt={video.snippet.title} width={100} height={56} className="rounded-md object-cover w-24 flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow"/>
+                <div>
+                  <h4 className="text-sm font-semibold leading-tight text-gray-800 group-hover:text-purple-700">{decodeHtmlEntities(video.snippet.title)}</h4>
+                  <p className="text-xs text-purple-500">{video.snippet.channelTitle}</p>
+                </div>
+              </a>
+            ))}
+        </div>
+
+        {!isLoading && !error && (!Array.isArray(videos) || videos.length === 0) && (<div className="text-center py-12 text-gray-400"><Film className="mx-auto h-8 w-8 mb-2" /><p className="text-sm font-medium">No videos found.</p></div>)}
+      </CardContent>
     </Card>
   );
 }
