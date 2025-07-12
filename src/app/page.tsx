@@ -4,7 +4,8 @@ import { HackerNewsWidget } from "@/components/dashboard/HackerNewsWidget";
 import { SportsWidget } from "@/components/dashboard/SportsWidget";
 import { YouTubeWidget } from "@/components/dashboard/YouTubeWidget";
 import { TodoListWidget } from "@/components/dashboard/TodoListWidget";
-import { Flame, Globe, Rss, Tv, CheckSquare } from "lucide-react"; // ✅ Ajout de l'icône CheckSquare
+import { WeatherWidget } from "@/components/dashboard/WeatherWidget"; // ✅ Importer
+import { Flame, Globe, Rss, Tv, CheckSquare, CloudSun } from "lucide-react"; // ✅ Importer l'icône
 
 export default function DashboardPage() {
   return (
@@ -18,14 +19,14 @@ export default function DashboardPage() {
             A quick overview of your world. Welcome back!
           </p>
         </header>
-        {/* J'ai ajusté la grille pour mieux accueillir le nouveau widget */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          
-          {/* ✅ ÉTAPE 2: Ajouter le widget à la grille. Je le mets en premier. */}
           <TodoListWidget 
             icon={<CheckSquare className="h-6 w-6 text-green-500" />} 
           />
-          
+          {/* ✅ Ajouter le widget ici */}
+          <WeatherWidget 
+            icon={<CloudSun className="h-6 w-6 text-sky-500" />}
+          />
           <NewsWidget 
             title="World News" 
             topic="world"
@@ -34,15 +35,12 @@ export default function DashboardPage() {
           <HackerNewsWidget 
             icon={<Flame className="h-6 w-6 text-orange-500" />} 
           />
-          {/* J'ai fait en sorte que ces deux widgets prennent toute la largeur sur grand écran */}
-          <div className="xl:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <SportsWidget 
-              icon={<Rss className="h-6 w-6 text-red-500" />} 
-            />
-            <YouTubeWidget 
-              icon={<Tv className="h-6 w-6 text-purple-500" />} 
-            />
-          </div>
+          <SportsWidget 
+            icon={<Rss className="h-6 w-6 text-red-500" />} 
+          />
+          <YouTubeWidget 
+            icon={<Tv className="h-6 w-6 text-purple-500" />} 
+          />
         </div>
       </div>
     </main>
