@@ -12,6 +12,15 @@ const fetcher = (url: string) => fetch(url).then(res => {
     return res.json();
 });
 
+// ✅ DÉFINITION DU MODÈLE POUR UN ARTICLE
+interface NewsArticle {
+    url: string;
+    title: string;
+    source: {
+        name: string;
+    };
+}
+
 interface NewsWidgetProps {
     title: string;
     topic?: string;
@@ -24,7 +33,7 @@ export function NewsWidget({ title, topic, country, icon }: NewsWidgetProps) {
         ? `/api/news?topic=${encodeURIComponent(topic)}`
         : `/api/news?country=${encodeURIComponent(country || '')}`;
 
-    const { data: articles, error, isLoading } = useSWR(apiUrl, fetcher, {
+    const { data: articles, error, isLoading } = useSWR<NewsArticle[]>(apiUrl, fetcher, {
         refreshInterval: 900000,
     });
 
@@ -47,7 +56,8 @@ export function NewsWidget({ title, topic, country, icon }: NewsWidgetProps) {
             return <div className="text-center text-sm text-muted-foreground py-10">No news items found.</div>;
         }
         
-        return articles.slice(0, 4).map((article: any, index: number) => (
+        // ✅ Utilisation du modèle "NewsArticle" au lieu de "any"
+        return articles.slice(0, 4).map((article: NewsArticle, index: number) => (
             <a href={article.url} key={article.url || index} target="_blank" rel="noopener noreferrer" className="group block p-3 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="flex justify-between items-start gap-3">
                     <span className="text-sm font-medium text-gray-800 group-hover:text-blue-600">{article.title}</span>

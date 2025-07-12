@@ -4,17 +4,26 @@ import useSWR from 'swr';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ArrowBigUp, MessageSquare, Flame } from 'lucide-react';
+import { ArrowBigUp, MessageSquare } from 'lucide-react';
 import { ReactNode } from 'react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+// ✅ DÉFINITION DU MODÈLE POUR UNE STORY
+interface HackerNewsStory {
+  id: number;
+  url: string;
+  title: string;
+  score: number;
+  descendants: number;
+}
 
 interface HackerNewsProps {
   icon?: ReactNode;
 }
 
 export function HackerNewsWidget({ icon }: HackerNewsProps) {
-    const { data, error, isLoading } = useSWR('/api/hackernews', fetcher);
+    const { data, error, isLoading } = useSWR<HackerNewsStory[]>('/api/hackernews', fetcher);
 
     return (
         <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -25,7 +34,8 @@ export function HackerNewsWidget({ icon }: HackerNewsProps) {
             <CardContent className="space-y-3">
                 {isLoading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
                 {error && <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>Could not load stories.</AlertDescription></Alert>}
-                {data?.slice(0, 4).map((story: any, index: number) => (
+                {/* ✅ Utilisation du modèle "HackerNewsStory" au lieu de "any" */}
+                {data?.slice(0, 4).map((story: HackerNewsStory) => (
                     <div key={story.id} className="p-2 rounded-lg hover:bg-gray-100">
                        <a href={story.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-gray-800 hover:text-orange-600">
                             {story.title}

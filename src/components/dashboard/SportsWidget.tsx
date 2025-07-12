@@ -1,6 +1,6 @@
 // components/dashboard/SportsWidget.tsx
 "use client";
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import useSWR from 'swr';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,22 +11,42 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Settings, Users, Trophy } from 'lucide-react';
-import { ReactNode } from 'react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+// ✅ DÉFINITION DES MODÈLES POUR LES DONNÉES SPORTIVES
+interface SportEvent {
+    idEvent: string;
+    dateEvent: string;
+    strLeague: string;
+    strEvent: string;
+    intHomeScore: string;
+    intAwayScore: string;
+}
+
+interface PlayerData {
+    playerName: string;
+    teamName: string;
+    events: SportEvent[];
+}
+
+interface SportsData {
+    teams: SportEvent[];
+    players: PlayerData[];
+}
 
 interface SportsWidgetProps {
   icon?: ReactNode;
 }
 
 export function SportsWidget({ icon }: SportsWidgetProps) {
-    const [teams, setTeams] = useLocalStorage('sports-teams', '133714'); // Real Madrid ID
+    const [teams, setTeams] = useLocalStorage('sports-teams', '133714');
     const [players, setPlayers] = useLocalStorage('sports-players', 'Wembanyama');
     
     const [tempTeams, setTempTeams] = useState(teams);
     const [tempPlayers, setTempPlayers] = useState(players);
 
-    const { data, error, isLoading } = useSWR(`/api/sports?teams=${teams}&players=${players}`, fetcher, {
+    const { data, error, isLoading } = useSWR<SportsData>(`/api/sports?teams=${teams}&players=${players}`, fetcher, {
         isPaused: () => !teams && !players
     });
 
@@ -35,7 +55,8 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
         setPlayers(tempPlayers);
     };
 
-    const renderLatestEvent = (event: any) => (
+    // ✅ Utilisation du modèle "SportEvent" au lieu de "any"
+    const renderLatestEvent = (event: SportEvent) => (
         <div key={event.idEvent} className="p-3 bg-gray-100/80 rounded-lg text-center">
             <div className="text-xs font-medium text-red-600">{event.strLeague}</div>
             <div className="text-sm font-semibold my-1">{event.strEvent}</div>
@@ -44,7 +65,8 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
         </div>
     );
     
-    const renderPastEvent = (event: any) => (
+    // ✅ Utilisation du modèle "SportEvent" au lieu de "any"
+    const renderPastEvent = (event: SportEvent) => (
        <div key={event.idEvent} className="flex items-center justify-between p-2 border-t">
             <div className="flex-grow">
                 <div className="text-sm font-medium text-gray-700">{event.strEvent}</div>
@@ -54,7 +76,7 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
        </div>
     );
 
-    const hasData = data && (data.teams?.length > 0 || data.players?.some((p: any) => p.events.length > 0));
+    const hasData = data && (data.teams?.length > 0 || data.players?.some((p: PlayerData) => p.events.length > 0));
 
     return (
         <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -85,14 +107,15 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
                 {isLoading && <Skeleton className="h-36 w-full" />}
                 {error && <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>Could not load scores.</AlertDescription></Alert>}
                 
-                {data?.teams?.length > 0 && (
+                {data?.teams && data.teams.length > 0 && (
                     <>
                         {renderLatestEvent(data.teams[0])}
                         {data.teams.slice(1, 3).map(renderPastEvent)}
                     </>
                 )}
 
-                {data?.players?.map((playerData: any) => (
+                {/* ✅ Utilisation du modèle "PlayerData" au lieu de "any" */}
+                {data?.players?.map((playerData: PlayerData) => (
                     playerData.events.length > 0 && (
                         <div key={playerData.playerName} className="pt-2">
                             <h4 className="font-semibold text-sm mb-2 p-2 bg-muted rounded-md flex items-center gap-2"><Users className="h-4 w-4"/>{playerData.playerName}</h4>

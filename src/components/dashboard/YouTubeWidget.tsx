@@ -14,11 +14,9 @@ import { Settings, Film } from "lucide-react";
 import Image from "next/image";
 
 const decodeHtmlEntities = (text: string) => {
-  // Si on n'est pas dans un navigateur (pendant le build), on retourne le texte tel quel.
   if (typeof window === 'undefined') {
     return text;
   }
-  // Si on est dans un navigateur, on utilise la méthode normale.
   const textarea = document.createElement("textarea");
   textarea.innerHTML = text;
   return textarea.value;
@@ -28,6 +26,23 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const DEFAULT_CHANNELS = "UCVap-b1wWkKT6g7cr15T9og"; // FRANCE 24
 
+// ✅ DÉFINITION DU MODÈLE POUR UNE VIDÉO YOUTUBE
+interface YouTubeVideo {
+  id: {
+    videoId: string;
+  };
+  snippet: {
+    title: string;
+    thumbnails: {
+      medium: {
+        url: string;
+        width: number;
+        height: number;
+      };
+    };
+  };
+}
+
 interface YouTubeWidgetProps {
   icon?: ReactNode;
 }
@@ -36,7 +51,7 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
   const [channels, setChannels] = useLocalStorage("youtube-channels", DEFAULT_CHANNELS);
   const [tempChannels, setTempChannels] = useState(channels);
 
-  const { data: videos, error, isLoading } = useSWR(
+  const { data: videos, error, isLoading } = useSWR<YouTubeVideo[]>(
     channels ? `/api/youtube?channels=${channels}` : null,
     fetcher,
     { refreshInterval: 3600000 }
@@ -68,7 +83,8 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
     }
     return (
       <div className="grid grid-cols-2 gap-3">
-        {videos.slice(0, 4).map((video: any) => (
+        {/* ✅ Utilisation du modèle "YouTubeVideo" au lieu de "any" */}
+        {videos.slice(0, 4).map((video: YouTubeVideo) => (
           <a
             href={`https://www.youtube.com/watch?v=${video.id.videoId}`}
             key={video.id.videoId}
@@ -108,6 +124,7 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
                     <div className="grid gap-4 py-4">
                         <Label htmlFor="channels">Channel IDs (comma-separated)</Label>
                         <Input id="channels" value={tempChannels} onChange={(e) => setTempChannels(e.target.value)} />
+                        {/* ✅ Correction des caractères spéciaux */}
                         <p className="text-xs text-muted-foreground">Find a channel&apos;s ID in its page source (search for &quot;channelId&quot;).</p>
                     </div>
                     <DialogFooter><DialogClose asChild><Button onClick={handleSave}>Save</Button></DialogClose></DialogFooter>
