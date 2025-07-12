@@ -42,7 +42,7 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
                 {isClient && error && <Alert variant="destructive" className="text-xs"><AlertTitle>Error</AlertTitle><AlertDescription>Could not load scores.</AlertDescription></Alert>}
                 
                 <div className="space-y-3">
-                    {isClient && data?.teams?.length > 0 && (
+                    {isClient && data?.teams && data.teams.length > 0 && (
                         <div>
                             <h4 className="font-bold text-xs flex items-center gap-1.5 text-red-700 uppercase tracking-wider mb-1"><Trophy className="h-4 w-4"/>Team</h4>
                             {data.teams.slice(0, 2).map((event) => (
