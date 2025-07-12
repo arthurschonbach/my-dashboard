@@ -14,7 +14,11 @@ import { Settings, Film } from "lucide-react";
 import Image from "next/image";
 
 const decodeHtmlEntities = (text: string) => {
-  if (typeof window === 'undefined') return text;
+  // Si on n'est pas dans un navigateur (pendant le build), on retourne le texte tel quel.
+  if (typeof window === 'undefined') {
+    return text;
+  }
+  // Si on est dans un navigateur, on utilise la méthode normale.
   const textarea = document.createElement("textarea");
   textarea.innerHTML = text;
   return textarea.value;
