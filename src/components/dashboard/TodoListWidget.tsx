@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from '@/components/ui/label';
 import { Settings, Trash2, ListTodo } from 'lucide-react';
 
+// Interfaces and hooks remain the same...
 interface Todo { id: number; text: string; completed: boolean; }
 interface TodoListWidgetProps { icon?: ReactNode; }
 
@@ -50,7 +51,13 @@ export function TodoListWidget({ icon }: TodoListWidgetProps) {
               <div key={todo.id} className="flex items-center gap-3 py-1.5 group rounded-md hover:bg-green-50">
                 <Checkbox id={`todo-${todo.id}`} checked={todo.completed} onCheckedChange={() => toggleTodo(todo.id)} className="border-gray-400 data-[state=checked]:bg-green-500"/>
                 <label htmlFor={`todo-${todo.id}`} className={`text-sm flex-grow cursor-pointer ${todo.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>{todo.text}</label>
-                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => deleteTodo(todo.id)}><Trash2 className="h-3.5 w-3.5 text-red-400 hover:text-red-600" /></Button>
+                {/* 
+                  CHANGE: The bin is now visible by default on mobile (small screens).
+                  On medium screens and up (`md:`), it becomes invisible and only appears on hover.
+                */}
+                <Button variant="ghost" size="icon" className="h-6 w-6 md:opacity-0 group-hover:opacity-100" onClick={() => deleteTodo(todo.id)}>
+                    <Trash2 className="h-3.5 w-3.5 text-red-400 hover:text-red-600" />
+                </Button>
               </div>
             ))
           ) : (<div className="text-center py-10 text-gray-400 flex flex-col items-center justify-center h-full"><ListTodo className="h-8 w-8 mb-2" /><p className="text-sm font-medium">All tasks done!</p></div>)}
