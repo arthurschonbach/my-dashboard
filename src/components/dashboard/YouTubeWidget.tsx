@@ -24,7 +24,7 @@ const decodeHtmlEntities = (text: string) => {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-const DEFAULT_CHANNELS = "UCVap-b1wWkKT6g7cr15T9og"; // FRANCE 24
+const DEFAULT_CHANNELS = "UCVap-UCsBjURrPoezykLs9EqgamOA,UCIJZA6SJ3JjvuOZgYPYOHnA,UCZ7phf3m2AcPre5ZRpgF5uw,UCflHaa_47QnIfFlKrGG6TIg,UC5bH6_h7gsNYoWhYwQPS86A,UCXUPKJO5MZQN11PqgIvyuvQ,UCYO_jab_esuFRV4b17AJtAw"; // Fireship, Wiloo, Max Bellona, Paulygones, Looking4, Karpathy, 3B1B
 
 // ✅ DÉFINITION DU MODÈLE POUR UNE VIDÉO YOUTUBE
 interface YouTubeVideo {
