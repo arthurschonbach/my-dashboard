@@ -39,9 +39,9 @@ export function WeatherWidget({ icon }: { icon?: ReactNode }) {
   const handleSave = () => setCity(tempCity);
 
   return (
-    <Card className="rounded-xl bg-white shadow-sm transition-all hover:shadow-md">
-      <CardHeader className="p-4 flex flex-row items-center justify-between border-b">
-        <div className="flex items-center gap-2.5 text-slate-800">
+    <Card className="rounded-xl bg-white dark:bg-slate-800/50 shadow-sm transition-all hover:shadow-md border-slate-200 dark:border-slate-700">
+      <CardHeader className="p-4 flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-2.5 text-slate-800 dark:text-slate-100">
           {icon}
           <h3 className="text-base font-semibold tracking-tight">Weather</h3>
         </div>
@@ -50,19 +50,19 @@ export function WeatherWidget({ icon }: { icon?: ReactNode }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full"
+              className="h-8 w-8 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full"
             >
               <Settings className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-xl bg-slate-50">
+          <DialogContent className="rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-slate-800">
+              <DialogTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                 Weather Settings
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <Label htmlFor="city" className="text-slate-700">
+              <Label htmlFor="city" className="text-slate-700 dark:text-slate-300">
                 City Name
               </Label>
               <Input
@@ -70,7 +70,7 @@ export function WeatherWidget({ icon }: { icon?: ReactNode }) {
                 value={tempCity}
                 onChange={(e) => setTempCity(e.target.value)}
                 placeholder="e.g. London"
-                className="rounded-md border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                className="rounded-md bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
             <DialogFooter>
@@ -87,24 +87,22 @@ export function WeatherWidget({ icon }: { icon?: ReactNode }) {
         </Dialog>
       </CardHeader>
       <CardContent className="p-4">
-        {/* Skeleton, Error, and Empty states remain unchanged */}
         {(!isClient || isLoading) && <div className="space-y-4">{/*...*/}</div>}
         {error && <Alert variant="destructive">{/*...*/}</Alert>}
         {isClient && !isLoading && !error && !data && <div className="flex flex-col items-center">{/*...*/}</div>}
 
         {data && !error && (
           <div className="flex flex-col space-y-4">
-            {/* === REVISED: MAIN WEATHER DISPLAY === */}
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
-                <p className="text-2xl font-bold text-slate-800 capitalize tracking-tight">
+                <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 capitalize tracking-tight">
                   {city}
                 </p>
-                <p className="text-sm text-slate-600">
-                  <span className="font-medium text-slate-500">{data.current.description}</span>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <span className="font-medium text-slate-500 dark:text-slate-400">{data.current.description}</span>
                   <span className="mx-2">|</span>
-                  <span className="font-semibold">{data.current.high}°</span>
-                  <span className="text-slate-400 ml-2">{data.current.low}°</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{data.current.high}°</span>
+                  <span className="text-slate-400 dark:text-slate-500 ml-2">{data.current.low}°</span>
                 </p>
               </div>
               <div className="flex items-center -mt-2">
@@ -116,40 +114,37 @@ export function WeatherWidget({ icon }: { icon?: ReactNode }) {
                   className="drop-shadow-lg"
                   priority
                 />
-                <span className="text-5xl font-bold text-slate-800 tracking-tighter">
+                <span className="text-5xl font-bold text-slate-800 dark:text-slate-200 tracking-tighter">
                   {data.current.temp}°
                 </span>
               </div>
             </div>
 
-            {/* === REVISED: UNIFIED OUTLOOK SECTION === */}
-            <div className="space-y-4 pt-4 border-t border-slate-200/80">
-              {/* Today's Details */}
+            <div className="space-y-4 pt-4 border-t border-slate-200/80 dark:border-slate-700">
               <div className="flex justify-between items-center text-center">
-                <div className="flex items-center gap-2 text-sm text-slate-600" title="Chance of Rain">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300" title="Chance of Rain">
                   <Umbrella className="h-5 w-5 text-blue-500" />
                   <span className="font-semibold">
                     {data.current.chanceOfRain}%
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-600" title="Wind Speed">
-                  <Wind className="h-5 w-5 text-slate-500" />
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300" title="Wind Speed">
+                  <Wind className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                   <span className="font-semibold">{data.current.wind} kph</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-600" title="Humidity">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300" title="Humidity">
                   <Droplets className="h-5 w-5 text-sky-500" />
                   <span className="font-semibold">{data.current.humidity}%</span>
                 </div>
               </div>
 
-              {/* Forecast */}
               <div className="flex justify-around">
                 {data.forecast.map((day, index) => (
                   <div
                     key={index}
                     className="flex flex-col items-center space-y-1.5 text-xs p-1 w-16"
                   >
-                    <span className="font-bold text-slate-600">
+                    <span className="font-bold text-slate-600 dark:text-slate-300">
                       {day.day.substring(0, 3)}
                     </span>
                     <Image
@@ -160,8 +155,8 @@ export function WeatherWidget({ icon }: { icon?: ReactNode }) {
                       className="drop-shadow-sm"
                     />
                     <div className="font-semibold">
-                      <span className="text-slate-800">{day.high}°</span>{" "}
-                      <span className="text-slate-400">{day.low}°</span>
+                      <span className="text-slate-800 dark:text-slate-200">{day.high}°</span>{" "}
+                      <span className="text-slate-400 dark:text-slate-500">{day.low}°</span>
                     </div>
                   </div>
                 ))}

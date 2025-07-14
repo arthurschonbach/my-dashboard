@@ -1,4 +1,4 @@
-// components/dashboard/NewstWidget.tsx
+// components/dashboard/NewsWidget.tsx
 "use client";
 import useSWR from "swr";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -20,9 +20,9 @@ export function NewsWidget({ icon }: GdeltWidgetProps) {
   });
 
   return (
-    <Card className="rounded-xl bg-white shadow-sm transition-all hover:shadow-md">
-      <CardHeader className="p-4 flex flex-row items-center justify-between border-b">
-        <div className="flex items-center gap-2.5 text-slate-800">
+    <Card className="rounded-xl bg-white dark:bg-slate-800/50 shadow-sm transition-all hover:shadow-md border-slate-200 dark:border-slate-700">
+      <CardHeader className="p-4 flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-2.5 text-slate-800 dark:text-slate-100">
           {icon}
           <h3 className="text-base font-semibold tracking-tight">Global Events Monitor</h3>
         </div>
@@ -32,8 +32,8 @@ export function NewsWidget({ icon }: GdeltWidgetProps) {
           <div className="space-y-4 p-2">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i}>
-                <Skeleton className="h-4 w-full mb-1.5 rounded" />
-                <Skeleton className="h-3 w-1/4 rounded" />
+                <Skeleton className="h-4 w-full mb-1.5 rounded bg-slate-200 dark:bg-slate-700" />
+                <Skeleton className="h-3 w-1/4 rounded bg-slate-200 dark:bg-slate-700" />
               </div>
             ))}
           </div>
@@ -54,13 +54,13 @@ export function NewsWidget({ icon }: GdeltWidgetProps) {
               key={article.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block group p-2.5 rounded-lg hover:bg-slate-50 transition-colors"
+              className="block group p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
             >
-              <span className="text-sm font-medium leading-snug text-slate-800 group-hover:text-indigo-600">
+              <span className="text-sm font-medium leading-snug text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                 {article.title}
               </span>
               <div className="flex justify-between items-center mt-1.5">
-                <p className="text-xs text-slate-500 font-semibold uppercase">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">
                   {article.domain}
                 </p>
                 <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
@@ -70,9 +70,9 @@ export function NewsWidget({ icon }: GdeltWidgetProps) {
         </div>
         
         {!isLoading && !error && (!articles || articles.length === 0) && (
-          <div className="text-center py-10 text-slate-500">
-            <Zap className="mx-auto h-12 w-12 mb-3 text-slate-300" />
-            <p className="font-semibold text-slate-700">All quiet</p>
+          <div className="text-center py-10 text-slate-500 dark:text-slate-400">
+            <Zap className="mx-auto h-12 w-12 mb-3 text-slate-300 dark:text-slate-600" />
+            <p className="font-semibold text-slate-700 dark:text-slate-300">All quiet</p>
             <p className="text-sm">No major global events detected right now.</p>
           </div>
         )}

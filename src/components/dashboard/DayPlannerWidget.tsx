@@ -38,18 +38,18 @@ function TimePickerModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="relative bg-white w-full max-w-xs rounded-xl shadow-lg p-5 border border-slate-200"
+        className="relative bg-white dark:bg-slate-800 w-full max-w-xs rounded-xl shadow-lg p-5 border border-slate-200 dark:border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-semibold text-center text-slate-900 mb-4">
+        <h3 className="text-lg font-semibold text-center text-slate-900 dark:text-slate-100 mb-4">
           Select Time
         </h3>
         
-        <h4 className="font-semibold text-center text-slate-500 mb-2 text-xs uppercase tracking-wider">
+        <h4 className="font-semibold text-center text-slate-500 dark:text-slate-400 mb-2 text-xs uppercase tracking-wider">
           Hour
         </h4>
         <div className="grid grid-cols-6 gap-1.5 mb-5">
@@ -61,8 +61,8 @@ function TimePickerModal({
               onClick={() => setSelectedHour(hour)}
               className={`rounded-md h-9 w-9 transition-all text-sm font-bold ${
                 selectedHour === hour
-                  ? "bg-amber-500 text-white hover:bg-amber-600 ring-2 ring-offset-2 ring-offset-white ring-amber-400"
-                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
+                  ? "bg-amber-500 text-white hover:bg-amber-600 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-800 ring-amber-400"
+                  : "bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600"
               }`}
             >
               {hour}
@@ -70,7 +70,7 @@ function TimePickerModal({
           ))}
         </div>
         
-        <h4 className="font-semibold text-center text-slate-500 mb-2 text-xs uppercase tracking-wider">
+        <h4 className="font-semibold text-center text-slate-500 dark:text-slate-400 mb-2 text-xs uppercase tracking-wider">
           Minute
         </h4>
         <div className="grid grid-cols-4 gap-2">
@@ -79,7 +79,7 @@ function TimePickerModal({
               key={minute}
               size="sm"
               variant="outline"
-              className="border-slate-200 hover:bg-amber-500 hover:text-white font-semibold text-slate-800 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+              className="border-slate-200 dark:border-slate-600 hover:bg-amber-500 hover:text-white dark:text-slate-200 dark:hover:text-white font-semibold text-slate-800 transition-colors disabled:opacity-50 disabled:pointer-events-none"
               disabled={!selectedHour}
               onClick={() => handleMinuteSelect(minute)}
             >
@@ -93,8 +93,7 @@ function TimePickerModal({
   );
 }
 
-
-// --- MAIN WIDGET COMPONENT (Unchanged) ---
+// --- MAIN WIDGET COMPONENT ---
 interface DayPlannerWidgetProps {
   icon?: ReactNode;
 }
@@ -159,9 +158,9 @@ export function DayPlannerWidget({ icon }: DayPlannerWidgetProps) {
 
   return (
     <>
-      <Card className="rounded-xl bg-white shadow-sm transition-all hover:shadow-md flex flex-col">
-        <CardHeader className="p-4 flex flex-row items-center justify-between border-b">
-          <div className="flex items-center gap-2.5 text-slate-800">
+      <Card className="rounded-xl bg-white dark:bg-slate-800/50 shadow-sm transition-all hover:shadow-md flex flex-col border-slate-200 dark:border-slate-700">
+        <CardHeader className="p-4 flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-2.5 text-slate-800 dark:text-slate-100">
             {icon}
             <h3 className="text-base font-semibold tracking-tight">
               Day Planner
@@ -170,7 +169,7 @@ export function DayPlannerWidget({ icon }: DayPlannerWidgetProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full"
+            className="h-8 w-8 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full"
             onClick={handleSortSlots}
             aria-label="Sort time slots"
           >
@@ -183,8 +182,8 @@ export function DayPlannerWidget({ icon }: DayPlannerWidgetProps) {
               <div className="space-y-2 p-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <Skeleton className="h-8 w-20 rounded-md" />
-                    <Skeleton className="h-8 w-full rounded-md" />
+                    <Skeleton className="h-8 w-20 rounded-md bg-slate-200 dark:bg-slate-700" />
+                    <Skeleton className="h-8 w-full rounded-md bg-slate-200 dark:bg-slate-700" />
                   </div>
                 ))}
               </div>
@@ -195,21 +194,21 @@ export function DayPlannerWidget({ icon }: DayPlannerWidgetProps) {
               timeSlots.map((hour) => (
                 <div
                   key={hour}
-                  className="flex items-center gap-1 group rounded-lg hover:bg-amber-50/50"
+                  className="flex items-center gap-1 group rounded-lg hover:bg-amber-50/50 dark:hover:bg-slate-700/50"
                 >
                   <Button
                     variant="ghost"
                     onClick={() => setPickerOpenForSlot(hour)}
-                    className="font-mono text-sm w-24 justify-start gap-1.5 text-amber-800 hover:text-amber-900"
+                    className="font-mono text-sm w-24 justify-start gap-1.5 text-amber-800 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300"
                   >
-                    <Clock className="h-4 w-4 text-amber-600/70" /> {hour}
+                    <Clock className="h-4 w-4 text-amber-600/70 dark:text-amber-500/70" /> {hour}
                   </Button>
                   <Input
                     type="text"
                     placeholder="Plan your hour..."
                     value={plan[hour] || ""}
                     onChange={(e) => handlePlanChange(hour, e.target.value)}
-                    className="h-8 text-sm font-medium border-none shadow-none bg-transparent focus-visible:ring-1 focus-visible:ring-amber-400 focus:bg-white transition-all rounded-md"
+                    className="h-8 text-sm font-medium border-none shadow-none bg-transparent dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-amber-400 focus:bg-white dark:focus:bg-slate-900 transition-all rounded-md"
                   />
                   <Button
                     variant="ghost"
@@ -217,14 +216,14 @@ export function DayPlannerWidget({ icon }: DayPlannerWidgetProps) {
                     className="h-7 w-7 rounded-full"
                     onClick={() => handleRemoveSlot(hour)}
                   >
-                    <Trash2 className="h-4 w-4 text-red-400 hover:text-red-600" />
+                    <Trash2 className="h-4 w-4 text-red-400 hover:text-red-600 dark:hover:text-red-500" />
                   </Button>
                 </div>
               ))}
             {isClient && timeSlots.length === 0 && (
-              <div className="text-center py-10 text-slate-500 flex flex-col items-center justify-center h-full">
-                <CalendarPlus className="h-12 w-12 mb-3 text-slate-300" />
-                <p className="font-semibold text-slate-700">An empty canvas</p>
+              <div className="text-center py-10 text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center h-full">
+                <CalendarPlus className="h-12 w-12 mb-3 text-slate-300 dark:text-slate-600" />
+                <p className="font-semibold text-slate-700 dark:text-slate-300">An empty canvas</p>
                 <p className="text-sm">Add a time slot to start planning.</p>
               </div>
             )}
@@ -233,7 +232,7 @@ export function DayPlannerWidget({ icon }: DayPlannerWidgetProps) {
             <Button
               variant="outline"
               onClick={handleAddNewSlot}
-              className="mt-2 w-full border-dashed border-2 hover:border-solid hover:bg-slate-50 hover:text-slate-800 border-slate-300 text-slate-500 font-medium rounded-lg"
+              className="mt-2 w-full border-dashed border-2 hover:border-solid hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 font-medium rounded-lg"
             >
               <Plus className="h-4 w-4 mr-2" /> Add Time Slot
             </Button>

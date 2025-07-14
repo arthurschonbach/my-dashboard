@@ -59,9 +59,9 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
   const handleSave = () => setChannels(tempChannels);
 
   return (
-    <Card className="rounded-xl bg-white shadow-sm transition-all hover:shadow-md">
-      <CardHeader className="p-4 flex flex-row items-center justify-between border-b">
-        <div className="flex items-center gap-2.5 text-slate-800">
+    <Card className="rounded-xl bg-white dark:bg-slate-800/50 shadow-sm transition-all hover:shadow-md border-slate-200 dark:border-slate-700">
+      <CardHeader className="p-4 flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-2.5 text-slate-800 dark:text-slate-100">
           {icon}
           <h3 className="text-base font-semibold tracking-tight">
             Latest Videos
@@ -72,29 +72,29 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full"
+              className="h-8 w-8 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full"
             >
               <Settings className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-xl bg-slate-50">
+          <DialogContent className="rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-slate-800">
+              <DialogTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                 YouTube Preferences
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <Label htmlFor="channels" className="text-slate-700">
+              <Label htmlFor="channels" className="text-slate-700 dark:text-slate-300">
                 Channel IDs (comma-separated)
               </Label>
               <Input
                 id="channels"
                 value={tempChannels}
                 onChange={(e) => setTempChannels(e.target.value)}
-                className="rounded-md border-slate-300 focus:border-red-500 focus:ring-red-500"
+                className="rounded-md bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-red-500 focus:ring-red-500"
               />
-              <p className="text-xs text-slate-500">
-                Find a channel&apos;s ID in its page URL (it starts with &apos;UC...&apos;).
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Find a channel&#39;s ID in its page URL (it starts with &#39;UC...&#39;).
               </p>
             </div>
             <DialogFooter>
@@ -115,10 +115,10 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
           <div className="space-y-3 p-2">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3">
-                <Skeleton className="h-16 w-24 rounded-md flex-shrink-0" />
+                <Skeleton className="h-16 w-24 rounded-md flex-shrink-0 bg-slate-200 dark:bg-slate-700" />
                 <div className="space-y-2 flex-grow">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-3 w-1/3" />
+                  <Skeleton className="h-4 w-full bg-slate-200 dark:bg-slate-700" />
+                  <Skeleton className="h-3 w-1/3 bg-slate-200 dark:bg-slate-700" />
                 </div>
               </div>
             ))}
@@ -146,7 +146,7 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
                 key={video.id.videoId}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-4 group p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <Image
                   src={video.snippet.thumbnails.medium.url}
@@ -156,10 +156,10 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
                   className="rounded-md object-cover w-28 flex-shrink-0 shadow-sm transition-transform"
                 />
                 <div>
-                  <h4 className="text-sm font-semibold leading-snug text-slate-800 group-hover:text-red-600">
+                  <h4 className="text-sm font-semibold leading-snug text-slate-800 dark:text-slate-200 group-hover:text-red-600 dark:group-hover:text-red-400">
                     {decodeHtmlEntities(video.snippet.title)}
                   </h4>
-                  <p className="text-xs text-slate-500 font-medium mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                     {video.snippet.channelTitle}
                   </p>
                 </div>
@@ -170,9 +170,9 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
         {!isLoading &&
           !error &&
           (!Array.isArray(videos) || videos.length === 0) && (
-            <div className="text-center py-10 text-slate-500">
-              <Video className="mx-auto h-12 w-12 mb-3 text-slate-300" />
-              <p className="font-semibold text-slate-700">No new videos</p>
+            <div className="text-center py-10 text-slate-500 dark:text-slate-400">
+              <Video className="mx-auto h-12 w-12 mb-3 text-slate-300 dark:text-slate-600" />
+              <p className="font-semibold text-slate-700 dark:text-slate-300">No new videos</p>
               <p className="text-sm">Channels are quiet right now.</p>
             </div>
           )}

@@ -68,16 +68,16 @@ export function TodoListWidget({ icon }: TodoListWidgetProps) {
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
-    <Card className="rounded-xl bg-white shadow-sm transition-all hover:shadow-md">
-      <CardHeader className="p-4 flex flex-row items-start justify-between border-b">
-        <div className="flex items-center gap-2.5 text-slate-800">
+    <Card className="rounded-xl bg-white dark:bg-slate-800/50 shadow-sm transition-all hover:shadow-md border-slate-200 dark:border-slate-700">
+      <CardHeader className="p-4 flex flex-row items-start justify-between border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-2.5 text-slate-800 dark:text-slate-100">
           {icon}
           <div>
             <h3 className="text-base font-semibold tracking-tight">
               To-Do List
             </h3>
             {isClient && deadline && (
-              <CardDescription className="text-xs text-green-600 font-semibold">
+              <CardDescription className="text-xs text-green-600 dark:text-green-400 font-semibold">
                 Deadline: {new Date(deadline).toLocaleDateString()}
               </CardDescription>
             )}
@@ -88,19 +88,19 @@ export function TodoListWidget({ icon }: TodoListWidgetProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full"
+              className="h-8 w-8 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full"
             >
               <Settings className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-xl bg-slate-50">
+          <DialogContent className="rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-slate-800">
+              <DialogTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                 To-Do Settings
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <Label htmlFor="deadline" className="text-slate-700">
+              <Label htmlFor="deadline" className="text-slate-700 dark:text-slate-300">
                 Task Deadline
               </Label>
               <Input
@@ -108,7 +108,7 @@ export function TodoListWidget({ icon }: TodoListWidgetProps) {
                 type="date"
                 value={tempDeadline}
                 onChange={(e) => setTempDeadline(e.target.value)}
-                className="rounded-md border-slate-300 focus:border-green-500 focus:ring-green-500"
+                className="rounded-md bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 focus:border-green-500 focus:ring-green-500 text-slate-900 dark:text-slate-100"
               />
             </div>
             <DialogFooter>
@@ -130,12 +130,12 @@ export function TodoListWidget({ icon }: TodoListWidgetProps) {
             placeholder="Add a new task..."
             value={newTodoText}
             onChange={(e) => setNewTodoText(e.target.value)}
-            className="h-9 text-sm rounded-md border-slate-300 focus:border-green-500 focus:ring-green-500"
+            className="h-9 text-sm rounded-md bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-green-500 focus:ring-green-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
           <Button
             type="submit"
             size="sm"
-            className="h-9 rounded-md bg-slate-800 hover:bg-slate-900 text-white transition-colors"
+            className="h-9 rounded-md bg-slate-800 hover:bg-slate-900 dark:bg-slate-100 dark:hover:bg-slate-200 dark:text-slate-900 text-white transition-colors"
           >
             Add
           </Button>
@@ -144,14 +144,14 @@ export function TodoListWidget({ icon }: TodoListWidgetProps) {
           <div className="px-1 mb-2">
             <Progress.Root
               value={progress}
-              className="w-full h-2 rounded-full bg-slate-200 overflow-hidden"
+              className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden"
             >
               <Progress.Indicator
                 className="h-full bg-green-500 transition-transform duration-500"
                 style={{ transform: `translateX(-${100 - progress}%)` }}
               />
             </Progress.Root>
-            <p className="text-xs text-right text-slate-500 mt-1">
+            <p className="text-xs text-right text-slate-500 dark:text-slate-400 mt-1">
               {completedTasks} / {totalTasks} completed
             </p>
           </div>
@@ -161,20 +161,20 @@ export function TodoListWidget({ icon }: TodoListWidgetProps) {
             todos.map((todo) => (
               <div
                 key={todo.id}
-                className="flex items-center gap-3 p-1.5 group rounded-lg hover:bg-slate-50"
+                className="flex items-center gap-3 p-1.5 group rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50"
               >
                 <Checkbox
                   id={`todo-${todo.id}`}
                   checked={todo.completed}
                   onCheckedChange={() => toggleTodo(todo.id)}
-                  className="border-slate-400 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                  className="border-slate-400 dark:border-slate-500 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                 />
                 <label
                   htmlFor={`todo-${todo.id}`}
                   className={`text-sm flex-grow cursor-pointer ${
                     todo.completed
-                      ? "line-through text-slate-400"
-                      : "text-slate-800 font-medium"
+                      ? "line-through text-slate-400 dark:text-slate-500"
+                      : "text-slate-800 dark:text-slate-200 font-medium"
                   }`}
                 >
                   {todo.text}
@@ -190,9 +190,9 @@ export function TodoListWidget({ icon }: TodoListWidgetProps) {
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-slate-500 flex flex-col items-center justify-center h-full">
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center h-full">
               <PartyPopper className="h-12 w-12 mb-3 text-green-400" />
-              <p className="font-semibold text-slate-700">All caught up!</p>
+              <p className="font-semibold text-slate-700 dark:text-slate-300">All caught up!</p>
               <p className="text-sm">Enjoy your break.</p>
             </div>
           )}
