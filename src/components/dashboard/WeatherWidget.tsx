@@ -4,8 +4,7 @@ import { useState, useEffect, ReactNode } from "react";
 import useSWR from "swr";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Compass, Wind, Droplets, Umbrella } from "lucide-react";
+import { Settings, Wind, Droplets, Umbrella } from "lucide-react";
 import Image from "next/image";
 import type { WeatherData } from "@/app/api/weather/route";
 

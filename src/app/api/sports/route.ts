@@ -9,7 +9,7 @@ interface SportEvent {
     dateEvent: string;
     strTime: string;
     // Add other event properties you might need
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 // Helper to fetch events from a given API endpoint

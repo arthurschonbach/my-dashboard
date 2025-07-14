@@ -80,9 +80,10 @@ export async function GET(request: Request) {
       }))
     };
     
-    return NextResponse.json(formattedData);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    console.error('[WEATHER API ERROR]', errorMessage);
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+      return NextResponse.json(formattedData);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      console.error('[WEATHER API ERROR]', errorMessage);
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
+    }
   }
