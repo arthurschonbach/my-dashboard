@@ -73,7 +73,7 @@ export async function GET(request: Request) {
       },
       // On prend les 3 prochains jours avec slice(1, 4)
       forecast: rawData.forecast.forecastday.slice(1, 4).map((day: RawForecastDay) => ({
-        day: new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'long' }),
+        day: new Date(day.date).toLocaleDateString('en-EN', { weekday: 'long' }),
         high: Math.round(day.day.maxtemp_c),
         low: Math.round(day.day.mintemp_c),
         iconURL: `https:${day.day.condition.icon}`,

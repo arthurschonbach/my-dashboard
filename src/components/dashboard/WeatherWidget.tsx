@@ -98,12 +98,16 @@ export function WeatherWidget({ icon }: { icon?: ReactNode }) {
                 <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 capitalize tracking-tight">
                   {city}
                 </p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  <span className="font-medium text-slate-500 dark:text-slate-400">{data.current.description}</span>
-                  <span className="mx-2">|</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{data.current.high}°</span>
-                  <span className="text-slate-400 dark:text-slate-500 ml-2">{data.current.low}°</span>
-                </p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      {data.current.high}°
+                    </span>
+                    <span className="text-slate-400 dark:text-slate-500">
+                      {data.current.low}°
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className="flex items-center -mt-2">
                 <Image
