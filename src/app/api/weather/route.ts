@@ -1,20 +1,23 @@
 // app/api/weather/route.ts
 import { NextResponse } from 'next/server';
 
-// ✅ CONTRAT MIS À JOUR : L'icône est maintenant une URL complète, ce qui est plus simple.
+// ✅ CONTRAT MIS À JOUR : Ajout du vent, de l'humidité et du risque de pluie pour le jour actuel.
 export interface WeatherData {
   current: {
     temp: number;
     description: string;
-    iconURL: string; // Changement de 'icon' en 'iconURL'
+    iconURL: string;
     high: number;
     low: number;
+    wind: number;
+    humidity: number;
+    chanceOfRain: number;
   };
   forecast: {
     day: string;
     high: number;
     low: number;
-    iconURL: string; // Changement de 'icon' en 'iconURL'
+    iconURL: string;
   }[];
 }
 
@@ -24,6 +27,7 @@ interface RawForecastDay {
     day: {
         maxtemp_c: number;
         mintemp_c: number;
+        daily_chance_of_rain: number; // On récupère le risque de pluie
         condition: {
             text: string;
             icon: string;
@@ -36,7 +40,6 @@ export const revalidate = 600; // Mise en cache pendant 10 minutes
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const city = searchParams.get('city');
-  // ✅ On utilise la nouvelle variable d'environnement
   const apiKey = process.env.WEATHERAPI_KEY;
 
   if (!city) {
@@ -47,9 +50,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    // ✅ NOUVELLE URL : On appelle l'API de WeatherAPI avec le bon format.
-    // 'days=3' nous donne le jour actuel et les 2 prochains.
-    const weatherResponse = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=3&aqi=no&alerts=no&lang=en`);
+    // ✅ NOUVELLE URL : On demande 'days=4' pour avoir le jour J + 3 jours de prévisions.
+    const weatherResponse = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=4&aqi=no&alerts=no&lang=en`);
     
     if (!weatherResponse.ok) {
         const errorData = await weatherResponse.json();
@@ -57,16 +59,20 @@ export async function GET(request: Request) {
     }
     const rawData = await weatherResponse.json();
 
-    // ✅ NOUVELLE TRANSFORMATION : On mappe la réponse de WeatherAPI à notre contrat WeatherData.
+    // ✅ NOUVELLE TRANSFORMATION : On mappe les nouvelles données (vent, etc.) et on prend 3 jours de prévisions.
     const formattedData: WeatherData = {
       current: {
         temp: Math.round(rawData.current.temp_c),
         description: rawData.current.condition.text,
-        iconURL: `https:${rawData.current.condition.icon}`, // On ajoute 'https:' car l'API renvoie une URL sans protocole
+        iconURL: `https:${rawData.current.condition.icon}`,
         high: Math.round(rawData.forecast.forecastday[0].day.maxtemp_c),
         low: Math.round(rawData.forecast.forecastday[0].day.mintemp_c),
+        wind: Math.round(rawData.current.wind_kph), // Ajout de la vitesse du vent
+        humidity: rawData.current.humidity,         // Ajout de l'humidité
+        chanceOfRain: rawData.forecast.forecastday[0].day.daily_chance_of_rain, // Ajout du risque de pluie pour aujourd'hui
       },
-      forecast: rawData.forecast.forecastday.slice(1, 3).map((day: RawForecastDay) => ({
+      // On prend les 3 prochains jours avec slice(1, 4)
+      forecast: rawData.forecast.forecastday.slice(1, 4).map((day: RawForecastDay) => ({
         day: new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'long' }),
         high: Math.round(day.day.maxtemp_c),
         low: Math.round(day.day.mintemp_c),
@@ -80,4 +86,3 @@ export async function GET(request: Request) {
     console.error('[WEATHER API ERROR]', errorMessage);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
-}

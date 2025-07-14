@@ -1,83 +1,228 @@
 // components/dashboard/SportsWidget.tsx
 "use client";
-import { useState, useEffect, ReactNode } from 'react';
-import useSWR from 'swr';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useState, useEffect, ReactNode } from "react";
+import useSWR from "swr";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Settings, Users, Trophy } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Settings, Trophy, CalendarClock } from "lucide-react";
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-// Interfaces remain the same...
-interface SportEvent { idEvent: string; strEvent: string; intHomeScore: string; intAwayScore: string; }
-interface PlayerData { playerName: string; events: SportEvent[]; }
-interface SportsData { teams: SportEvent[]; players: PlayerData[]; }
-interface SportsWidgetProps { icon?: ReactNode; }
+interface SportEvent {
+  idEvent: string;
+  strEvent: string;
+  intHomeScore: string | null;
+  intAwayScore: string | null;
+  dateEvent: string;
+  strTime: string; // <-- Add this property
+  strLeague: string;
+  strHomeTeam?: string;
+  strAwayTeam?: string;
+}
+
+interface SportsData {
+  results: SportEvent[];
+  upcoming: SportEvent[];
+}
+
+interface SportsWidgetProps {
+  icon?: ReactNode;
+}
 
 export function SportsWidget({ icon }: SportsWidgetProps) {
-    const [teams, setTeams] = useLocalStorage('sports-teams', '133714');
-    const [players, setPlayers] = useLocalStorage('sports-players', 'Wembanyama');
-    const [tempTeams, setTempTeams] = useState(teams);
-    const [tempPlayers, setTempPlayers] = useState(players);
-    const [isClient, setIsClient] = useState(false);
-    useEffect(() => { setIsClient(true); }, []);
+  const [teams, setTeams] = useLocalStorage("sports-teams", "133714,134879");
+  const [tempTeams, setTempTeams] = useState(teams);
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-    // CHANGE: Simplified SWR hook. It will only generate a URL string (and thus fetch)
-    // if we are on the client AND either teams or players has a value. Otherwise, the key is `null`.
-    const { data, error, isLoading } = useSWR<SportsData>(
-        isClient && (teams || players) ? `/api/sports?teams=${teams}&players=${players}` : null,
-        fetcher
-    );
+  const { data, error, isLoading } = useSWR<SportsData>(
+    isClient && teams ? `/api/sports?teams=${teams}` : null,
+    fetcher
+  );
+  const handleSave = () => {
+    setTeams(tempTeams);
+  };
 
-    const handleSave = () => { setTeams(tempTeams); setPlayers(tempPlayers); };
+  const hasResults = data?.results && data.results.length > 0;
+  const nextGame = data?.upcoming?.[0];
+  const hasData = hasResults || !!nextGame;
 
-    // This logic now works correctly because if there are no teams/players, `data` will be undefined
-    // and `isLoading` will be false, correctly showing the empty state.
-    const hasData = data && (data.teams?.length > 0 || data.players?.some(p => p.events.length > 0));
+  const getTeamDisplayName = (event: SportEvent) =>
+    event.strHomeTeam && event.strAwayTeam
+      ? `${event.strHomeTeam} vs ${event.strAwayTeam}`
+      : event.strEvent.replace(/\s+vs\s+/, " vs ");
 
-    return (
-        <Card className="rounded-xl border-b-4 border-red-400 bg-white shadow-lg transition-transform hover:-translate-y-1">
-            <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between">
-                <div className="flex items-center gap-2 text-red-600">{icon}<h3 className="text-base font-bold tracking-tight">Sports Feed</h3></div>
-                <Dialog><DialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-red-600"><Settings className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Sports Preferences</DialogTitle></DialogHeader><div className="space-y-4 py-4"><div className="space-y-2"><Label htmlFor="teams">Team IDs</Label><Input id="teams" value={tempTeams} onChange={e => setTempTeams(e.target.value)} /></div><div className="space-y-2"><Label htmlFor="players">Player Names</Label><Input id="players" value={tempPlayers} onChange={e => setTempPlayers(e.target.value)} /></div></div><DialogFooter><DialogClose asChild><Button onClick={handleSave}>Save</Button></DialogClose></DialogFooter></DialogContent></Dialog>
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-                {isLoading && <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>}
-                {error && <Alert variant="destructive" className="text-xs"><AlertTitle>Error</AlertTitle><AlertDescription>Could not load scores.</AlertDescription></Alert>}
-                
-                <div className="space-y-3">
-                    {isClient && data?.teams && data.teams.length > 0 && (
-                        <div>
-                            <h4 className="font-bold text-xs flex items-center gap-1.5 text-red-700 uppercase tracking-wider mb-1"><Trophy className="h-4 w-4"/>Team</h4>
-                            {data.teams.slice(0, 2).map((event) => (
-                                <div key={event.idEvent} className="flex items-center justify-between py-1.5 rounded-md hover:bg-red-50 px-1.5 -mx-1.5">
-                                    <p className="text-sm font-semibold text-gray-700">{event.strEvent}</p>
-                                    <p className="text-lg font-bold text-gray-800 pl-4">{event.intHomeScore}-{event.intAwayScore}</p>
-                                </div>
-                            ))}
-                        </div>
+  // Helper to create a UTC-aware Date object from event data
+  const getEventDateTime = (event: SportEvent): Date => {
+    // Append 'Z' to indicate the time from the API is in UTC
+    return new Date(`${event.dateEvent}T${event.strTime || '00:00:00'}Z`);
+  };
+
+  return (
+    <Card className="rounded-xl bg-white shadow-sm transition-all hover:shadow-md">
+      <CardHeader className="p-4 flex flex-row items-center justify-between border-b">
+        <div className="flex items-center gap-2.5 text-slate-800">
+          {icon}
+          <h3 className="text-base font-semibold tracking-tight">
+            Sports Feed
+          </h3>
+        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="rounded-xl bg-slate-50">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold text-slate-800">
+                Sports Preferences
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="teams"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Team IDs (comma-separated)
+                </Label>
+                <Input
+                  id="teams"
+                  value={tempTeams}
+                  onChange={(e) => setTempTeams(e.target.value)}
+                  className="rounded-md border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button
+                  onClick={handleSave}
+                  className="rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Save Changes
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent className="p-2">
+        {isLoading && (
+          <div className="space-y-3 p-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        )}
+        {error && (
+          <div className="p-2">
+            <Alert variant="destructive" className="text-sm rounded-lg">
+              <AlertTitle className="font-semibold">Error</AlertTitle>
+              <AlertDescription>
+                Could not load scores. Check team IDs.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        {isClient && !isLoading && !error && hasData && (
+          <>
+            <div className="space-y-2">
+              {hasResults &&
+                data.results.slice(0, 3).map((event) => (
+                  <div
+                    key={event.idEvent}
+                    className="group flex flex-col gap-1 py-2 px-2.5 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-800 truncate flex-1 group-hover:text-blue-600">
+                        {getTeamDisplayName(event)}
+                      </p>
+                      <span className="text-base font-bold text-slate-700 ml-2">
+                        {event.intHomeScore ?? "0"} -{" "}
+                        {event.intAwayScore ?? "0"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-slate-500">
+                        {new Date(getEventDateTime(event)).toLocaleString(
+                          undefined,
+                          {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </span>
+                      <span className="font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
+                        {event.strLeague}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {nextGame && (
+              <div className="p-3 mb-2 rounded-lg bg-slate-50 border border-slate-200/80">
+                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <CalendarClock className="h-3.5 w-3.5" />
+                  Upcoming Game
+                </p>
+                <p className="text-sm font-semibold text-slate-800 truncate">
+                  {getTeamDisplayName(nextGame)}
+                </p>
+                <div className="flex items-center justify-between text-xs mt-1">
+                  <span className="font-medium text-slate-500">
+                    {new Date(getEventDateTime(nextGame)).toLocaleString(
+                      undefined,
+                      {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
                     )}
-                    {isClient && data?.players?.map(p => p.events.length > 0 && (
-                        <div key={p.playerName}>
-                            <h4 className="font-bold text-xs flex items-center gap-1.5 text-red-700 uppercase tracking-wider mb-1"><Users className="h-4 w-4"/>{p.playerName}</h4>
-                            {p.events.slice(0, 2).map((event) => (
-                                <div key={event.idEvent} className="flex items-center justify-between py-1.5 rounded-md hover:bg-red-50 px-1.5 -mx-1.5">
-                                    <p className="text-sm font-semibold text-gray-700">{event.strEvent}</p>
-                                    <p className="text-lg font-bold text-gray-800 pl-4">{event.intHomeScore}-{event.intAwayScore}</p>
-                                </div>
-                            ))}
-                        </div>
-                    ))}
+                  </span>
+                  <span className="font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
+                    {nextGame.strLeague}
+                  </span>
                 </div>
+              </div>
+            )}
+          </>
+        )}
 
-                {isClient && !isLoading && !error && !hasData && (<div className="text-center py-12 text-gray-400"><Trophy className="mx-auto h-8 w-8 mb-2" /><p className="text-sm font-medium">No recent events.</p><p className="text-xs">Add a team or player in settings!</p></div>)}
-            </CardContent>
-        </Card>
-    );
+        {isClient && !isLoading && !error && !hasData && (
+          <div className="text-center py-10 text-slate-500">
+            <Trophy className="mx-auto h-12 w-12 mb-3 text-slate-300" />
+            <p className="font-semibold text-slate-700">Ready for Action!</p>
+            <p className="text-sm">Add your favorite teams to begin.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }

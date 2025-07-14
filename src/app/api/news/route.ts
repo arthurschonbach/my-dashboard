@@ -1,42 +1,90 @@
-// app/api/news/route.ts
 import { NextResponse } from 'next/server';
 
-const API_KEY = process.env.NEWS_API_KEY;
-// This base URL is for GNews, adapt if you use another service
-const BASE_URL = 'https://gnews.io/api/v4/top-headlines';
+// Revalidate data every 15 minutes
+export const revalidate = 900;
 
-export const revalidate = 900; // Mise en cache pendant 15 minutes
+export interface GdeltArticle {
+  url: string;
+  title: string;
+  domain: string;
+  seendate: string;
+}
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const country = searchParams.get('country');
-  const topic = searchParams.get('topic');
+export async function GET() {
+  const GDELT_API_BASE_URL = 'https://api.gdeltproject.org/api/v2/doc/doc';
 
-  if (!API_KEY) {
-    return NextResponse.json({ error: 'News API key is not configured' }, { status: 500 });
-  }
+  const reputableDomains = [
+    'reuters.com',
+    'apnews.com',
+    'bbc.co.uk',
+    'cnn.com',
+    'npr.org',
+    'wsj.com',
+    'nytimes.com',
+    'washingtonpost.com',
+    'theguardian.com',
+    'ft.com'
+  ];
 
-  let url = `${BASE_URL}?apikey=${API_KEY}&lang=en&max=10`;
-  if (country) {
-    url += `&country=${country}`;
-  } else if (topic) {
-    url += `&topic=${topic}`;
-  } else {
-    return NextResponse.json({ error: 'A country or topic is required' }, { status: 400 });
-  }
+  const domainWeights: Record<string, number> = {
+    'nytimes.com': 10,
+    'washingtonpost.com': 9,
+    'reuters.com': 8,
+    'bbc.co.uk': 8,
+    'apnews.com': 7,
+    'cnn.com': 6,
+    'npr.org': 5,
+    'wsj.com': 4,
+    'theguardian.com': 3,
+    'ft.com': 2
+  };
+
+  // Build query with domain filters
+  const domainFilters = reputableDomains.map(domain => `domain:${domain}`).join(' OR ');
+  const query = `(${domainFilters}) sourcelang:english`;
+
+  const params = new URLSearchParams({
+    mode: 'artlist',
+    format: 'json',
+    maxrecords: '30', // Fetch more for filtering
+    sort: 'DateDesc'
+  });
+
+  const finalUrl = `${GDELT_API_BASE_URL}?query=${encodeURIComponent(query)}&${params.toString()}`;
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-        const errorData = await response.json();
-        console.error('News API Error:', errorData);
-        throw new Error('Failed to fetch news from the provider');
+    const response = await fetch(finalUrl, {
+      next: { revalidate: 900 }
+    });
+
+    const contentType = response.headers.get("content-type");
+    if (!response.ok || !contentType || !contentType.includes("application/json")) {
+      const errorText = await response.text();
+      console.error('GDELT API Error - Status:', response.status, 'Body:', errorText);
+      throw new Error(`Invalid response from GDELT API: ${errorText}`);
     }
+
     const data = await response.json();
-    // The data structure is { articles: [...] } for GNews
-    return NextResponse.json(data.articles);
+    const articles: GdeltArticle[] = data.articles || [];
+
+    // Score and sort articles by domain importance
+    const topArticles = articles
+      .map(article => ({
+        ...article,
+        score: domainWeights[article.domain] || 0
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5); // Return top 5
+
+    return NextResponse.json(topArticles);
+
   } catch (error) {
-    console.error('Failed to fetch top headlines:', error);
-    return NextResponse.json({ error: 'Failed to fetch top headlines' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    console.error('[GDELT API ROUTE ERROR]', errorMessage);
+
+    return NextResponse.json(
+      { message: "Failed to fetch data from GDELT", error: errorMessage },
+      { status: 500 }
+    );
   }
 }
