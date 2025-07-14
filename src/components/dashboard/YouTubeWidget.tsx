@@ -1,6 +1,5 @@
-// components/dashboard/YouTubeWidget.tsx
 "use client";
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, KeyboardEvent } from "react";
 import useSWR from "swr";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -18,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Video } from "lucide-react";
+import { Settings, Video, X } from "lucide-react";
 import Image from "next/image";
 
 const decodeHtmlEntities = (text: string) => {
@@ -27,36 +26,73 @@ const decodeHtmlEntities = (text: string) => {
   textarea.innerHTML = text;
   return textarea.value;
 };
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
-const DEFAULT_CHANNELS =
-  "UCsBjURrPoezykLs9EqgamOA,UCZ7phf3m2AcPre5ZRpgF5uw,UCflHaa_47QnIfFlKrGG6TIg";
+
+// Default handles are more user-friendly
+const DEFAULT_HANDLES = ["@MKBHD", "@Mrwhosetheboss", "@UnboxTherapy"];
+
 interface YouTubeVideo {
-  id: { videoId: string };
-  snippet: {
-    title: string;
-    channelTitle: string;
-    thumbnails: { medium: { url: string } };
-  };
+  title: string;
+  link: string;
+  pubDate?: string;
+  author?: string;
+  enclosure?: { url?: string };
 }
+
 interface YouTubeWidgetProps {
   icon?: ReactNode;
 }
 
 export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
-  const [channels, setChannels] = useLocalStorage(
-    "youtube-channels",
-    DEFAULT_CHANNELS
+  const [handles, setHandles] = useLocalStorage<string[]>(
+    "youtube-handles",
+    DEFAULT_HANDLES
   );
-  const [tempChannels, setTempChannels] = useState(channels);
+  const [tempHandles, setTempHandles] = useState(handles);
+  const [newHandleInput, setNewHandleInput] = useState("");
+
+  // The API endpoint now accepts 'handles'
   const {
     data: videos,
     error,
     isLoading,
   } = useSWR<YouTubeVideo[]>(
-    channels ? `/api/youtube?channels=${channels}` : null,
+    handles.length > 0 ? `/api/youtube?handles=${handles.join(",")}` : null,
     fetcher
   );
-  const handleSave = () => setChannels(tempChannels);
+
+  const handleAddHandle = () => {
+    let newHandle = newHandleInput.trim();
+    // Ensure it starts with @
+    if (newHandle && !newHandle.startsWith("@")) {
+      newHandle = `@${newHandle}`;
+    }
+
+    if (newHandle && !tempHandles.find(h => h.toLowerCase() === newHandle.toLowerCase())) {
+      setTempHandles([...tempHandles, newHandle]);
+    }
+    setNewHandleInput("");
+  };
+
+  const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddHandle();
+    }
+  };
+
+  const handleRemoveHandle = (handleToRemove: string) => {
+    setTempHandles(tempHandles.filter((handle) => handle !== handleToRemove));
+  };
+
+  const handleSave = () => {
+    setHandles(tempHandles);
+  };
+
+  const handleCancel = () => {
+    setTempHandles(handles);
+  };
 
   return (
     <Card className="rounded-xl bg-white dark:bg-slate-800/50 shadow-sm transition-all hover:shadow-md border-slate-200 dark:border-slate-700">
@@ -67,7 +103,7 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
             Latest Videos
           </h3>
         </div>
-        <Dialog>
+        <Dialog onOpenChange={(isOpen) => !isOpen && handleCancel()}>
           <DialogTrigger asChild>
             <Button
               variant="ghost"
@@ -84,20 +120,45 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <Label htmlFor="channels" className="text-slate-700 dark:text-slate-300">
-                Channel IDs (comma-separated)
-              </Label>
-              <Input
-                id="channels"
-                value={tempChannels}
-                onChange={(e) => setTempChannels(e.target.value)}
-                className="rounded-md bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-red-500 focus:ring-red-500"
-              />
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Find a channel&#39;s ID in its page URL (it starts with &#39;UC...&#39;).
-              </p>
+              <div>
+                <Label htmlFor="handles" className="text-slate-700 dark:text-slate-300">
+                  Add Channel Handle
+                </Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    id="handles"
+                    value={newHandleInput}
+                    onChange={(e) => setNewHandleInput(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    className="rounded-md bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 focus:border-red-500 focus:ring-red-500"
+                    placeholder="@channelhandle"
+                  />
+                  <Button onClick={handleAddHandle} className="rounded-md bg-red-600 text-white hover:bg-red-700">Add</Button>
+                </div>
+              </div>
+
+              {tempHandles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-slate-700 dark:text-slate-300">
+                    Followed Channels
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {tempHandles.map(handle => (
+                      <div key={handle} className="flex items-center gap-1.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full px-3 py-1 text-sm">
+                        <span>{handle}</span>
+                        <button onClick={() => handleRemoveHandle(handle)} className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100">
+                          <X size={14}/>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
+              </DialogClose>
               <DialogClose asChild>
                 <Button
                   onClick={handleSave}
@@ -110,7 +171,9 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
           </DialogContent>
         </Dialog>
       </CardHeader>
+
       <CardContent className="p-2">
+        {/* The rest of the component (loading, error, video list) remains identical */}
         {isLoading && (
           <div className="space-y-3 p-2">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -124,12 +187,13 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
             ))}
           </div>
         )}
+
         {error && (
           <div className="p-2">
             <Alert variant="destructive" className="text-sm rounded-lg">
               <AlertTitle className="font-semibold">Error</AlertTitle>
               <AlertDescription>
-                Could not load videos. Check channel IDs.
+                Could not load videos. Check the channel handles.
               </AlertDescription>
             </Alert>
           </div>
@@ -142,25 +206,27 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
             videos.length > 0 &&
             videos.slice(0, 3).map((video) => (
               <a
-                href={`https://www.youtube.com/watch?v=${video.id.videoId}`}
-                key={video.id.videoId}
+                href={video.link}
+                key={video.link}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 group p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               >
-                <Image
-                  src={video.snippet.thumbnails.medium.url}
-                  alt={video.snippet.title}
-                  width={120}
-                  height={68}
-                  className="rounded-md object-cover w-28 flex-shrink-0 shadow-sm transition-transform"
-                />
+                {video.enclosure?.url && (
+                  <Image
+                    src={video.enclosure.url}
+                    alt={video.title}
+                    width={120}
+                    height={68}
+                    className="rounded-md object-cover w-28 flex-shrink-0 shadow-sm transition-transform"
+                  />
+                )}
                 <div>
                   <h4 className="text-sm font-semibold leading-snug text-slate-800 dark:text-slate-200 group-hover:text-red-600 dark:group-hover:text-red-400">
-                    {decodeHtmlEntities(video.snippet.title)}
+                    {decodeHtmlEntities(video.title)}
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-                    {video.snippet.channelTitle}
+                    {video.author}
                   </p>
                 </div>
               </a>

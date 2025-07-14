@@ -1,47 +1,94 @@
-// app/api/youtube/route.ts
 import { NextResponse } from 'next/server';
+import Parser from 'rss-parser';
 
-const API_KEY = process.env.YOUTUBE_API_KEY;
-const BASE_URL = 'https://www.googleapis.com/youtube/v3';
+const parser = new Parser();
+const handleToIdCache = new Map<string, string>();
 
-export const revalidate = 7200; // Mise en cache pendant 2 heures
+export const revalidate = 7200; // Cache for 2 hours
+
+/**
+ * Fetches a channel's page to find the canonical channel ID.
+ * Caches the result to avoid redundant fetches.
+ * @param handle The channel's handle (e.g., '@MKBHD')
+ * @returns The channel ID (e.g., 'UCBJycsmduvYEL83R_U4JriQ') or null if not found.
+ */
+async function getChannelIdFromHandle(handle: string): Promise<string | null> {
+  const normalizedHandle = handle.startsWith('@') ? handle : `@${handle}`;
+  
+  if (handleToIdCache.has(normalizedHandle)) {
+    return handleToIdCache.get(normalizedHandle)!;
+  }
+
+  try {
+    const response = await fetch(`https://www.youtube.com/${normalizedHandle}`);
+    if (!response.ok) {
+        console.error(`Failed to fetch channel page for ${normalizedHandle}: ${response.status}`);
+        return null;
+    }
+    const html = await response.text();
+
+    // The channel ID is in a <meta> tag like: <meta property="og:url" content="https://www.youtube.com/channel/UC...">
+    const match = html.match(/<meta\s+property="og:url"\s+content="https:\/\/www.youtube.com\/channel\/([^"]+)">/);
+    
+    if (match && match[1]) {
+      const channelId = match[1];
+      handleToIdCache.set(normalizedHandle, channelId); // Cache the found ID
+      return channelId;
+    }
+
+    console.warn(`Could not find channel ID for ${normalizedHandle}.`);
+    return null;
+  } catch (error) {
+    console.error(`Error fetching or parsing page for ${handle}:`, error);
+    return null;
+  }
+}
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const channelIds = searchParams.get('channels')?.split(',');
+  const { searchParams } = new URL(request.url);
+  const handles = searchParams.get('handles')?.split(',');
 
-    if (!API_KEY) {
-        return NextResponse.json({ error: 'YouTube API key is not configured' }, { status: 500 });
+  if (!handles || handles.length === 0) {
+    return NextResponse.json({ error: 'Channel handles are required' }, { status: 400 });
+  }
+
+  try {
+    // Step 1: Convert all handles to Channel IDs
+    const idPromises = handles.map(handle => getChannelIdFromHandle(handle));
+    const channelIds = (await Promise.all(idPromises)).filter((id): id is string => id !== null);
+
+    if (channelIds.length === 0) {
+      return NextResponse.json({ error: 'Could not resolve any channel handles to IDs' }, { status: 404 });
     }
-    if (!channelIds || channelIds.length === 0) {
-        return NextResponse.json({ error: 'Channel IDs are required' }, { status: 400 });
-    }
 
-    try {
-        // Get date from 7 days ago in ISO 8601 format
-        const twoDaysAgo = new Date();
-        twoDaysAgo.setDate(twoDaysAgo.getDate() - 7);
-        const publishedAfter = twoDaysAgo.toISOString();
+    // Step 2: Fetch RSS feeds using the resolved Channel IDs
+    const rssPromises = channelIds.map(async (channelId) => {
+      const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+      const feed = await parser.parseURL(feedUrl);
+      return feed.items || [];
+    });
 
-        // Fetch videos for all channels
-        const videoPromises = channelIds.map(async (channelId) => {
-            const url = `${BASE_URL}/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&order=date&maxResults=10&publishedAfter=${publishedAfter}`;
-            const response = await fetch(url);
-            if (!response.ok) return []; // Skip failed requests
-            const data = await response.json();
-            return data.items;
-        });
+    const allItems = (await Promise.all(rssPromises)).flat();
 
-        const results = await Promise.all(videoPromises);
-        const allVideos = results.flat().filter(video => video && video.id.videoId); // Flatten and filter out any nulls/non-videos
+    // The rest of the logic remains the same...
+    const filteredItems = allItems.filter(item => {
+      const link = item.link?.toLowerCase() || '';
+      return !link.includes('/shorts/');
+    });
 
-        // Sort all videos by publish date, descending
-        allVideos.sort((a, b) => new Date(b.snippet.publishedAt).getTime() - new Date(a.snippet.publishedAt).getTime());
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const recentItems = filteredItems.filter(item => {
+      const pubDate = new Date(item.pubDate || '').getTime();
+      return !isNaN(pubDate) && pubDate > sevenDaysAgo;
+    });
 
-        return NextResponse.json(allVideos);
+    recentItems.sort((a, b) =>
+      new Date(b.pubDate || '').getTime() - new Date(a.pubDate || '').getTime()
+    );
 
-    } catch (error) {
-        console.error('YouTube API error:', error);
-        return NextResponse.json({ error: 'Failed to fetch YouTube videos' }, { status: 500 });
-    }
+    return NextResponse.json(recentItems);
+  } catch (error) {
+    console.error('API Route Error:', error);
+    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
+  }
 }
