@@ -24,25 +24,18 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto">
         <header
           className="p-6 bg-slate-100/80 dark:bg-slate-900/80 backdrop-blur-lg sticky top-0 z-10 
-                     border-b border-slate-200 dark:border-slate-800 
-                     flex justify-between items-center"
+               border-b border-slate-200 dark:border-slate-800 
+               flex justify-between items-center"
         >
-          {/* Add dark mode text color for the title */}
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Dashboard
-          </h1>
-          <div className="flex items-center space-x-4">
-            {/* Add dark mode text color for the date */}
-            <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              {new Date().toLocaleDateString(undefined, {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </div>
-            <ThemeToggleButton />
+          <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            {new Date().toLocaleDateString(undefined, {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </div>
+          <ThemeToggleButton />
         </header>
 
         {/* Masonry/Auto-fit Layout */}

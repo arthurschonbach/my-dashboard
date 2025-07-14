@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-// Revalidate data every 15 minutes
-export const revalidate = 900;
+// Revalidate data every hour
+export const revalidate = 3600;
 
 export interface GdeltArticle {
   url: string;
