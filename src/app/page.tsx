@@ -7,6 +7,7 @@ import { TodoListWidget } from "@/components/dashboard/TodoListWidget";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { DayPlannerWidget } from "@/components/dashboard/DayPlannerWidget";
 import { ThemeToggleButton } from "@/components/dashboard/ThemeToggleButton";
+import { CurrentDate } from "@/components/dashboard/CurrentDate";
 import {
   Flame,
   Globe,
@@ -27,14 +28,7 @@ export default function DashboardPage() {
                border-b border-slate-200 dark:border-slate-800 
                flex justify-between items-center"
         >
-          <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            {new Date().toLocaleDateString(undefined, {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </div>
+          <CurrentDate />
           <ThemeToggleButton />
         </header>
 

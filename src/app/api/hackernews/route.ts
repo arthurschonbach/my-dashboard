@@ -1,7 +1,7 @@
 // app/api/hackernews/route.ts
 import { NextResponse } from 'next/server';
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 900; // Revalidate every 15 minutes
 
 export async function GET() {
   try {

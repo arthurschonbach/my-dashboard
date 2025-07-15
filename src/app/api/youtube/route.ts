@@ -4,7 +4,7 @@ import Parser from 'rss-parser';
 const parser = new Parser();
 const handleToIdCache = new Map<string, string>();
 
-export const revalidate = 7200; // Cache for 2 hours
+export const revalidate = 900; // Cache for 15 minutes
 
 /**
  * Fetches a channel's page to find the canonical channel ID.

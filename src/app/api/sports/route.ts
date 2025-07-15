@@ -15,7 +15,7 @@ interface SportEvent {
 // Helper to fetch events from a given API endpoint
 const fetchEvents = async (url: string): Promise<SportEvent[]> => {
     try {
-        const response = await fetch(url, { next: { revalidate: 7200 } }); // Cache for 2 hours
+        const response = await fetch(url, { next: { revalidate: 900 } }); // Cache for 15 minutes
         if (!response.ok) return [];
         const data = await response.json();
         // The API returns results under different keys, so we check for common ones.

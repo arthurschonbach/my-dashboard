@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Trophy, CalendarClock } from "lucide-react";
+import { Settings, Trophy, CalendarClock, X } from "lucide-react";
+import Image from "next/image";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -39,24 +40,68 @@ interface SportsData {
   upcoming: SportEvent[];
 }
 
+interface Team {
+  idTeam: string;
+  strTeam: string;
+  strTeamBadge: string;
+}
+
 interface SportsWidgetProps {
   icon?: ReactNode;
 }
 
+// A more user-friendly default team.
+const DEFAULT_TEAMS = [
+  {
+    idTeam: "133612",
+    strTeam: "Man City",
+    strTeamBadge:
+      "https://www.thesportsdb.com/images/media/team/badge/vwpvry1467462651.png",
+  },
+];
+
 export function SportsWidget({ icon }: SportsWidgetProps) {
-  const [teams, setTeams] = useLocalStorage("sports-teams", "133714,134879");
+  const [teams, setTeams] = useLocalStorage<Team[]>(
+    "sports-teams-v2",
+    DEFAULT_TEAMS
+  );
   const [tempTeams, setTempTeams] = useState(teams);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  const teamIds = teams.map((t) => t.idTeam).join(",");
   const { data, error, isLoading } = useSWR<SportsData>(
-    isClient && teams ? `/api/sports?teams=${teams}` : null,
+    isClient && teamIds ? `/api/sports?teams=${teamIds}` : null,
     fetcher
   );
+
+  const { data: searchResults, isLoading: isSearching } = useSWR<Team[]>(
+    searchQuery.length > 2 ? `/api/sports/search?q=${searchQuery}` : null,
+    fetcher
+  );
+
+  const handleAddTeam = (team: Team) => {
+    if (!tempTeams.find((t) => t.idTeam === team.idTeam)) {
+      setTempTeams([...tempTeams, team]);
+    }
+    setSearchQuery("");
+  };
+
+  const handleRemoveTeam = (teamId: string) => {
+    setTempTeams(tempTeams.filter((t) => t.idTeam !== teamId));
+  };
+
   const handleSave = () => {
     setTeams(tempTeams);
+  };
+
+  const handleCancel = () => {
+    setTempTeams(teams);
+    setSearchQuery("");
   };
 
   const hasResults = data?.results && data.results.length > 0;
@@ -69,7 +114,7 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
       : event.strEvent.replace(/\s+vs\s+/, " vs ");
 
   const getEventDateTime = (event: SportEvent): Date => {
-    return new Date(`${event.dateEvent}T${event.strTime || '00:00:00'}Z`);
+    return new Date(`${event.dateEvent}T${event.strTime || "00:00:00"}Z`);
   };
 
   return (
@@ -81,7 +126,7 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
             Sports Feed
           </h3>
         </div>
-        <Dialog>
+        <Dialog onOpenChange={(isOpen) => !isOpen && handleCancel()}>
           <DialogTrigger asChild>
             <Button
               variant="ghost"
@@ -100,20 +145,80 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label
-                  htmlFor="teams"
+                  htmlFor="team-search"
                   className="text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
-                  Team IDs (comma-separated)
+                  Search for a Team
                 </Label>
                 <Input
-                  id="teams"
-                  value={tempTeams}
-                  onChange={(e) => setTempTeams(e.target.value)}
+                  id="team-search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="rounded-md bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
+                  placeholder="e.g., Real Madrid, Lakers..."
                 />
               </div>
+
+              {isSearching && (
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Searching...
+                </p>
+              )}
+
+              <div className="max-h-32 overflow-y-auto space-y-1">
+                {searchResults?.map((team) => (
+                  <div
+                    key={team.idTeam}
+                    onClick={() => handleAddTeam(team)}
+                    className="flex items-center gap-3 p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                  >
+                    {/* FIX: Add conditional rendering and append /preview */}
+                    {team.strTeamBadge && (
+                      <Image
+                        src={`${team.strTeamBadge}/preview`}
+                        alt={`${team.strTeam} badge`}
+                        width={24}
+                        height={24}
+                        className="rounded-full"
+                      />
+                    )}
+                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                      {team.strTeam}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {tempTeams.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-slate-700 dark:text-slate-300">
+                    Followed Teams
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {tempTeams.map((team) => (
+                      <div
+                        key={team.idTeam}
+                        className="flex items-center gap-2 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full px-3 py-1 text-sm font-medium"
+                      >
+                        <span>{team.strTeam}</span>
+                        <button
+                          onClick={() => handleRemoveTeam(team.idTeam)}
+                          className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </DialogClose>
               <DialogClose asChild>
                 <Button
                   onClick={handleSave}
@@ -130,7 +235,10 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
         {isLoading && (
           <div className="space-y-3 p-2">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full rounded-lg bg-slate-200 dark:bg-slate-700" />
+              <Skeleton
+                key={i}
+                className="h-12 w-full rounded-lg bg-slate-200 dark:bg-slate-700"
+              />
             ))}
           </div>
         )}
@@ -139,7 +247,7 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
             <Alert variant="destructive" className="text-sm rounded-lg">
               <AlertTitle className="font-semibold">Error</AlertTitle>
               <AlertDescription>
-                Could not load scores. Check team IDs.
+                Could not load scores. Check your connection or team selections.
               </AlertDescription>
             </Alert>
           </div>
@@ -170,8 +278,6 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
                           {
                             month: "short",
                             day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
                           }
                         )}
                       </span>
@@ -204,7 +310,7 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
                       }
                     )}
                   </span>
-                   <span className="font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded-full">
+                  <span className="font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded-full">
                     {nextGame.strLeague}
                   </span>
                 </div>
@@ -216,8 +322,12 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
         {isClient && !isLoading && !error && !hasData && (
           <div className="text-center py-10 text-slate-500 dark:text-slate-400">
             <Trophy className="mx-auto h-12 w-12 mb-3 text-slate-300 dark:text-slate-600" />
-            <p className="font-semibold text-slate-700 dark:text-slate-300">Ready for Action!</p>
-            <p className="text-sm">Add your favorite teams to begin.</p>
+            <p className="font-semibold text-slate-700 dark:text-slate-300">
+              Ready for Action!
+            </p>
+            <p className="text-sm">
+              Search for and add your favorite teams to begin.
+            </p>
           </div>
         )}
       </CardContent>

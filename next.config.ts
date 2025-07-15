@@ -12,6 +12,12 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'cdn.weatherapi.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.thesportsdb.com',
+        port: '',
+        pathname: '/images/media/team/badge/**',
+      },
     ],
   },
 };
