@@ -162,7 +162,7 @@ export function SportsWidget({ icon }: SportsWidgetProps) {
               <Settings className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+          <DialogContent className="rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100">
           Sports Preferences

@@ -30,7 +30,29 @@ const decodeHtmlEntities = (text: string) => {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 // Default handles are more user-friendly
-const DEFAULT_HANDLES = ["@MKBHD", "@Fireship", "@AndrejKarpathy", "@HowMoneyWorks", "@Paulygones", "@Underscore_", "@3blue1brown", "@ExploreFR", "@GaspardG", "@Looking4Channel", "@maxbellona", "@Vox"];
+const DEFAULT_HANDLES = [
+  "@MKBHD",
+  "@Fireship", 
+  "@AndrejKarpathy",
+  "@HowMoneyWorks",
+  "@Paulygones",
+  "@Underscore_",
+  "@3blue1brown",
+  "@ExploreFR",
+  "@GaspardG",
+  "@Looking4Channel",
+  "@maxbellona",
+  "@TwoMinutePapers",
+  "@Vercidium",
+  "@SteveMould",
+  "@veritasium",
+  "@MinutePhysics",
+  "@MinuteEarth",
+  "@EconomicsExplained",
+  "@StuffMadeHere",
+  "@DIYPerks",
+  "@johnnyharris"
+];
 
 interface YouTubeVideo {
   title: string;
@@ -113,7 +135,7 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
               <Settings className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+          <DialogContent className="rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                 YouTube Preferences
@@ -204,7 +226,7 @@ export function YouTubeWidget({ icon }: YouTubeWidgetProps) {
             !error &&
             Array.isArray(videos) &&
             videos.length > 0 &&
-            videos.slice(0, 3).map((video) => (
+            videos.slice(0, 5).map((video) => (
               <a
                 href={video.link}
                 key={video.link}
