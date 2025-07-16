@@ -30,7 +30,7 @@ const decodeHtmlEntities = (text: string) => {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 // Default handles are more user-friendly
-const DEFAULT_HANDLES = ["@MKBHD", "@Mrwhosetheboss", "@UnboxTherapy"];
+const DEFAULT_HANDLES = ["@MKBHD", "@Fireship", "@AndrejKarpathy", "@HowMoneyWorks", "@Paulygones", "@Underscore_", "@3blue1brown", "@ExploreFR", "@GaspardG", "@Looking4Channel", "@maxbellona", "@Vox"];
 
 interface YouTubeVideo {
   title: string;
